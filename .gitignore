@@ -1,0 +1,15 @@
+# Runtime secrets (do not commit)
+infra/.env
+infra/mailu.env
+
+# Keep nested upstream repo out of main repo history
+frappe_docker/
+
+# Generated backups/archives
+infra/archives/
+infra/.env.bak.*
+infra/mailu.env.bak.*
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

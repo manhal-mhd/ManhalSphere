@@ -1,0 +1,112 @@
+version: "3.8"
+
+services:
+  erp-db:
+    image: mariadb:10.6
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-change_me_root}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-change_me_root}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    volumes:
+      - erp_db_data:/var/lib/mysql
+    networks:
+      - backend
+
+  erp-redis-cache:
+    image: redis:6-alpine
+    restart: unless-stopped
+    networks:
+      - backend
+
+  erp-redis-queue:
+    image: redis:6-alpine
+    restart: unless-stopped
+    networks:
+      - backend
+
+  erp-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.erpnext-hrms
+    image: erpnext-hrms:local
+    restart: unless-stopped
+    depends_on:
+      - erp-db
+      - erp-redis-cache
+      - erp-redis-queue
+    environment:
+      DB_HOST: erp-db
+      DB_PORT: "3306"
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-change_me_root}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-change_me_root}
+      REDIS_CACHE: erp-redis-cache:6379
+      REDIS_QUEUE: erp-redis-queue:6379
+      SOCKETIO_PORT: "9000"
+    volumes:
+      - erp_sites:/home/frappe/frappe-bench/sites
+      - erp_apps:/home/frappe/frappe-bench/apps
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys;\nimport urllib.error;\n\ntry:\n r=urllib.request.urlopen('http://127.0.0.1:8000', timeout=5);\n sys.exit(0 if r.getcode() < 500 else 1)\nexcept Exception:\n sys.exit(1)"]
+      interval: 15s
+      timeout: 6s
+      retries: 20
+      start_period: 60s
+    networks:
+      - backend
+
+  erp-nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - erp-app
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.erp.rule=Host(`erp.${BASE_DOMAIN}`)
+      - traefik.http.routers.erp.entrypoints=websecure
+      - traefik.http.routers.erp.tls=true
+      - traefik.http.routers.erp.tls.certresolver=le
+      - traefik.http.services.erp.loadbalancer.server.port=80
+    volumes:
+      - erp_sites:/home/frappe/frappe-bench/sites:ro
+      - erp_apps:/home/frappe/frappe-bench/apps:ro
+      - ./nginx/erp.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - backend
+      - proxy
+
+  erp-hrms-setup:
+    image: erpnext-hrms:local
+    restart: "no"
+    depends_on:
+      - erp-app
+    command: ["bash","/scripts/erp-hrms-setup.sh"]
+    environment:
+      DB_HOST: erp-db
+      DB_PORT: "3306"
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-change_me_root}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-change_me_root}
+      SOCKETIO_PORT: "9000"
+    volumes:
+      - erp_sites:/home/frappe/frappe-bench/sites
+      - erp_apps:/home/frappe/frappe-bench/apps
+      - ./scripts:/scripts:ro
+    networks:
+      - backend
+
+volumes:
+  erp_sites:
+  erp_db_data:
+  erp_apps:
+
+networks:
+  proxy:
+    external: true
+    name: proxy
+  backend:
+    external: true
+    name: backend

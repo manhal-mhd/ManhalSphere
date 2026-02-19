@@ -1,0 +1,20 @@
+# ERPNext v15 with HRMS preinstalled and assets built
+FROM frappe/erpnext:v15.96.1
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+USER root
+RUN apt-get update && apt-get install -y -q --no-install-recommends git curl ca-certificates gnupg && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y -q --no-install-recommends nodejs && \
+    npm install -g yarn && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+USER frappe
+WORKDIR /home/frappe/frappe-bench
+
+# Clone HRMS and install into virtualenv; build assets
+RUN git clone --branch version-15 https://github.com/frappe/hrms apps/hrms && \
+    env/bin/pip install -U pip && \
+    env/bin/pip install -e apps/hrms && \
+    bench build

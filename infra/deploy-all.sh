@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Simple deployment script to start all core Office-in-a-Box services over HTTP only.
+# Run from the infra directory:  sudo bash deploy-all.sh  OR  bash deploy-all.sh (it will use sudo internally).
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+ENV_FILE="$SCRIPT_DIR/.env"
+BASE_DOMAIN=""
+ERP_WAIT_TIMEOUT="${ERP_WAIT_TIMEOUT:-900}"
+ERP_WAIT_INTERVAL="${ERP_WAIT_INTERVAL:-5}"
+
+init_colors() {
+	if [ -t 1 ] && [ "${NO_COLOR:-}" = "" ]; then
+		C_RESET='\033[0m'
+		C_BOLD='\033[1m'
+		C_GREEN='\033[32m'
+		C_YELLOW='\033[33m'
+		C_BLUE='\033[34m'
+		C_CYAN='\033[36m'
+		C_RED='\033[31m'
+	else
+		C_RESET=''
+		C_BOLD=''
+		C_GREEN=''
+		C_YELLOW=''
+		C_BLUE=''
+		C_CYAN=''
+		C_RED=''
+	fi
+}
+
+print_header() {
+	echo
+	echo -e "${C_BOLD}${C_CYAN}========================================${C_RESET}"
+	echo -e "${C_BOLD}${C_CYAN}  Office-in-a-Box Deployment${C_RESET}"
+	echo -e "${C_BOLD}${C_CYAN}========================================${C_RESET}"
+}
+
+print_step() {
+	echo
+	echo -e "${C_BOLD}${C_BLUE}$1${C_RESET}"
+}
+
+print_ok() {
+	echo -e "${C_GREEN}✔${C_RESET} $1"
+}
+
+print_warn() {
+	echo -e "${C_YELLOW}⚠${C_RESET} $1"
+}
+
+print_fail() {
+	echo -e "${C_RED}✖${C_RESET} $1"
+}
+
+load_base_domain() {
+	if [ -f "$ENV_FILE" ]; then
+		BASE_DOMAIN="$(grep -E '^BASE_DOMAIN=' "$ENV_FILE" | tail -n1 | cut -d'=' -f2- | tr -d '\r' | xargs || true)"
+	fi
+}
+
+wait_for_erp_ready() {
+	if [ -z "$BASE_DOMAIN" ]; then
+		print_warn "BASE_DOMAIN not found in .env; skipping ERP readiness wait."
+		return 0
+	fi
+
+	local erp_url="https://erp.${BASE_DOMAIN}/"
+	local elapsed=0
+	local code=""
+
+	print_step "[ERP] Waiting for ERP endpoint to become healthy..."
+	print_warn "Warm-up may take several minutes after reset/redeploy."
+
+	while [ "$elapsed" -lt "$ERP_WAIT_TIMEOUT" ]; do
+		code="$(curl -kLsS -o /dev/null -w '%{http_code}' "$erp_url" 2>/dev/null || true)"
+		if echo "$code" | grep -Eq '^(200|301|302)$'; then
+			print_ok "ERP is ready (HTTP $code) after ${elapsed}s"
+			return 0
+		fi
+
+		sleep "$ERP_WAIT_INTERVAL"
+		elapsed=$((elapsed + ERP_WAIT_INTERVAL))
+		if [ $((elapsed % 30)) -eq 0 ]; then
+			print_warn "ERP still warming up... (${elapsed}s elapsed, last HTTP ${code:-n/a})"
+		fi
+	done
+
+	print_fail "ERP did not become ready within ${ERP_WAIT_TIMEOUT}s (last HTTP ${code:-n/a})."
+	print_warn "Check: sudo docker logs infra-erp-app-1"
+	return 1
+}
+
+compose_cmd() {
+	if docker compose version >/dev/null 2>&1; then
+		sudo docker compose "$@"
+	else
+		sudo docker-compose "$@"
+	fi
+}
+
+run_stack() {
+	local label="$1"
+	shift
+	print_step "$label"
+	if compose_cmd "$@"; then
+		print_ok "$label completed"
+	else
+		print_fail "$label failed"
+		exit 1
+	fi
+}
+
+init_colors
+load_base_domain
+print_header
+
+run_stack "[1/5] Starting core infrastructure stack (proxy, portal, monitoring, wireguard)..." \
+	-f docker-compose.yml up -d
+
+run_stack "[2/5] Building and starting ERP core services..." \
+	-f docker-compose.erpnext-hrms.yml up -d --build erp-db erp-redis-cache erp-redis-queue erp-app
+
+print_step "[ERP] Running ERP+HRMS setup/migrations..."
+if compose_cmd -f docker-compose.erpnext-hrms.yml run --rm erp-hrms-setup; then
+	print_ok "[ERP] Setup/migrations completed"
+else
+	print_fail "[ERP] Setup/migrations failed"
+	exit 1
+fi
+
+run_stack "[ERP] Starting ERP web (nginx)..." \
+	-f docker-compose.erpnext-hrms.yml up -d erp-nginx
+
+wait_for_erp_ready
+
+run_stack "[3/5] Starting Nextcloud stack..." \
+	-f docker-compose.nextcloud.yml up -d
+
+run_stack "[4/5] Starting Vaultwarden stack..." \
+	-f docker-compose.vaultwarden.yml up -d
+
+print_step "[5/5] Starting Mailu stack..."
+if [ -f "mailu.env" ]; then
+	if compose_cmd -f docker-compose.mail.yml up -d; then
+		print_ok "[5/5] Mailu stack completed"
+	else
+		print_fail "[5/5] Mailu stack failed"
+		exit 1
+	fi
+else
+	print_warn "mailu.env not found. Skipping Mailu deployment."
+	print_warn "To set up: cp mailu.env.example mailu.env and update DOMAIN, HOSTNAMES, SECRET_KEY, TLS settings."
+fi
+
+echo
+print_ok "All requested services are starting."
+echo -e "${C_BOLD}Next:${C_RESET} Use 'sudo docker ps' to verify."
