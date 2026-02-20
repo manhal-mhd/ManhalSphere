@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ManhalSphere Portal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <button id="aboutToggle" class="brand-link" aria-haspopup="dialog">ManhalSphere</button>
+      <p class="subtitle">Launch all applications</p>
+    </div>
+    <div class="actions">
+      <input class="search" placeholder="Search apps..." aria-label="Search apps">
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="group">
+      <h2>Business Apps</h2>
+      <div class="grid">
+        <a class="card" href="https://erp.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon erp"><img src="./icons/user.svg" alt="ERP - person"></div>
+          <div class="meta">
+            <div class="title">ERPNext + HRMS</div>
+            <div class="subtitle">Business operations and HR</div>
+          </div>
+        </a>
+
+        <a class="card" href="https://mail.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon mail"><img src="./icons/envelope.svg" alt="Mail"></div>
+          <div class="meta">
+            <div class="title">Mail</div>
+            <div class="subtitle">Webmail</div>
+          </div>
+        </a>
+
+        <a class="card" href="https://files.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon nextcloud"><img src="./icons/cloud.svg" alt="Nextcloud"></div>
+          <div class="meta">
+            <div class="title">Nextcloud</div>
+            <div class="subtitle">Files & collaboration</div>
+          </div>
+        </a>
+
+        <a class="card" href="https://pw.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon vault"><img src="./icons/lock-closed.svg" alt="Vault"></div>
+          <div class="meta">
+            <div class="title">Vaultwarden</div>
+            <div class="subtitle">Password manager</div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>Admin & Ops</h2>
+      <div class="grid">
+        <a class="card" href="https://docker.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon portainer"><img src="./icons/server.svg" alt="Portainer"></div>
+          <div class="meta">
+            <div class="title">Portainer</div>
+            <div class="subtitle">Container management</div>
+          </div>
+        </a>
+
+        <a class="card" href="https://status.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon uptime"><img src="./icons/chart-bar.svg" alt="Uptime"></div>
+          <div class="meta">
+            <div class="title">Uptime Kuma</div>
+            <div class="subtitle">Monitoring</div>
+          </div>
+        </a>
+
+        <a class="card" href="https://dns.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon dns"><img src="./icons/globe-alt.svg" alt="DNS"></div>
+          <div class="meta">
+            <div class="title">DNS Manager</div>
+            <div class="subtitle">Zones & records</div>
+          </div>
+        </a>
+
+        <a class="card" href="https://backup.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon backup"><img src="./icons/cloud-arrow-up.svg" alt="Backup"></div>
+          <div class="meta">
+            <div class="title">Backup Manager</div>
+            <div class="subtitle">Backups & restores</div>
+          </div>
+        </a>
+
+        <a class="card" href="https://mail.{{BASE_DOMAIN}}/admin" target="_blank" rel="noopener noreferrer">
+          <div class="icon mailadmin"><img src="./icons/shield-check.svg" alt="Mail Admin"></div>
+          <div class="meta">
+            <div class="title">Mail Admin</div>
+            <div class="subtitle">Mailu administration</div>
+          </div>
+        </a>
+
+        <a class="card" href="https://idp.{{BASE_DOMAIN}}" target="_blank" rel="noopener noreferrer">
+          <div class="icon idp"><img src="./icons/user-circle.svg" alt="Identity & SSO"></div>
+          <div class="meta">
+            <div class="title">Identity & SSO</div>
+            <div class="subtitle">Login, password, profile</div>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">© <a href="https://www.linkedin.com/in/manhalmohammed/" target="_blank" rel="noopener noreferrer">ManhalSphere</a></footer>
+
+  <!-- About modal -->
+  <div class="modal" id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" hidden>
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-content" role="document">
+      <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+      <h3 id="aboutTitle">ManhalSphere</h3>
+      <p>ManhalSphere is a production-oriented self-hosted platform that unifies core business and infrastructure services behind a single, domain-driven gateway. Built with Docker Compose, it provides a practical foundation for running ERP, file services, mail, password management, monitoring, backups, and DNS in one coherent operating sphere.</p>
+      <p>Its purpose is to make life easier: to help you build a reliable, secure micro-datacenter that is easy to operate, resilient, and maintainable.</p>
+      <p>Created by Manhal Mohammed — a passionate builder who focuses on simplifying self-hosted infrastructure for others.</p>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const aboutToggle = document.getElementById('aboutToggle');
+      const modal = document.getElementById('aboutModal');
+      const modalClose = document.getElementById('modalClose');
+      const modalBackdrop = document.getElementById('modalBackdrop');
+
+      function openModal(){ modal.hidden = false; document.body.style.overflow = 'hidden'; modalClose && modalClose.focus(); }
+      function closeModal(){ modal.hidden = true; document.body.style.overflow = ''; aboutToggle && aboutToggle.focus(); }
+
+      aboutToggle && aboutToggle.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+      modalClose && modalClose.addEventListener('click', closeModal);
+      modalBackdrop && modalBackdrop.addEventListener('click', closeModal);
+      document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && modal && !modal.hidden) closeModal(); });
+    })();
+  </script>
+</body>
+</html>

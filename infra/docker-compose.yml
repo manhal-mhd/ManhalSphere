@@ -35,13 +35,11 @@ services:
       - proxy
 
   portal:
-    image: b4bz/homer:latest
+    image: nginx:alpine
     container_name: portal
     restart: unless-stopped
-    env_file:
-      - .env
     volumes:
-      - ./portal:/www/assets:ro
+      - ./portal:/usr/share/nginx/html:ro
     networks:
       - proxy
     labels:
@@ -50,10 +48,9 @@ services:
       - traefik.http.routers.portal.entrypoints=websecure
       - traefik.http.routers.portal.tls=true
       - traefik.http.routers.portal.tls.certresolver=le
-      - traefik.http.services.portal.loadbalancer.server.port=8080
-    # Exposed internally only; published via nginx-proxy-manager
+      - traefik.http.services.portal.loadbalancer.server.port=80
     expose:
-      - "8080"
+      - "80"
 
   portainer:
     image: portainer/portainer-ce:latest

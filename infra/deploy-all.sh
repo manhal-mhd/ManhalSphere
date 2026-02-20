@@ -152,7 +152,32 @@ render_portal_config
 run_stack "[1/6] Starting core infrastructure stack (proxy, portal, dns, backup, monitoring, wireguard)..." \
 	-f docker-compose.yml up -d
 
+deploy_portal_site() {
+	if [ -z "$BASE_DOMAIN" ]; then
+		print_warn "BASE_DOMAIN not set; skipping portal HTML render/deploy."
+		return 0
+	fi
+
+	print_step "[Init] Deploying portal static site (index.html)..."
+	if [ -x "scripts/deploy-portal.sh" ]; then
+		if bash scripts/deploy-portal.sh "$BASE_DOMAIN"; then
+			print_ok "Portal deployed"
+		else
+			print_warn "Portal deploy script failed"
+		fi
+	else
+		print_warn "scripts/deploy-portal.sh not executable; attempting to run via bash"
+		if bash scripts/deploy-portal.sh "$BASE_DOMAIN"; then
+			print_ok "Portal deployed"
+		else
+			print_warn "Portal deploy script failed"
+		fi
+	fi
+}
+
 bootstrap_dns_records
+
+deploy_portal_site
 
 run_stack "[2/6] Building and starting ERP core services..." \
 	-f docker-compose.erpnext-hrms.yml up -d --build erp-db erp-redis-cache erp-redis-queue erp-app
