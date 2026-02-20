@@ -7,6 +7,7 @@ frappe_docker/
 
 # Generated backups/archives
 infra/archives/
+infra/backups/
 infra/.env.bak.*
 infra/mailu.env.bak.*
 

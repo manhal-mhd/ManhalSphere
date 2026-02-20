@@ -1,4 +1,4 @@
-title: Office-in-a-Box Portal
+title: ManhalSphere Portal
 subtitle: Launch all applications
 header: true
 footer: false
@@ -47,6 +47,11 @@ services:
         subtitle: DNS zones and records
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/pi-hole.svg"
         url: "https://dns.octalearn.sd"
+        target: "_blank"
+      - name: Backup Manager
+        subtitle: Restic backups and restore
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/restic.svg"
+        url: "https://backup.octalearn.sd"
         target: "_blank"
       - name: Mail Admin
         subtitle: Mailu administration

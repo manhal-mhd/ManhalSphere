@@ -1,6 +1,6 @@
 version: "3.9"
 
-# Mailu stack for Office-in-a-Box.
+# Mailu stack for ManhalSphere.
 # Copy mailu.env.example to mailu.env and set strong secrets before deployment.
 
 services:

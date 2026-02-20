@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Simple deployment script to start all core Office-in-a-Box services over HTTP only.
+# Simple deployment script to start all core ManhalSphere services over HTTP only.
 # Run from the infra directory:  sudo bash deploy-all.sh  OR  bash deploy-all.sh (it will use sudo internally).
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,7 +35,7 @@ init_colors() {
 print_header() {
 	echo
 	echo -e "${C_BOLD}${C_CYAN}========================================${C_RESET}"
-	echo -e "${C_BOLD}${C_CYAN}  Office-in-a-Box Deployment${C_RESET}"
+	echo -e "${C_BOLD}${C_CYAN}  ManhalSphere Deployment${C_RESET}"
 	echo -e "${C_BOLD}${C_CYAN}========================================${C_RESET}"
 }
 

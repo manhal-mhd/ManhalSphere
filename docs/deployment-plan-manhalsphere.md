@@ -1,4 +1,4 @@
-# Deployment Plan — Office-in-a-Box (Lightweight Core)
+# Deployment Plan — ManhalSphere (Lightweight Core)
 
 ## 1) Scope of This Plan
 

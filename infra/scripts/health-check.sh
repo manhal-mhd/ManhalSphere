@@ -28,7 +28,7 @@ init_colors() {
 print_header() {
   echo
   echo -e "${C_BOLD}${C_CYAN}========================================${C_RESET}"
-  echo -e "${C_BOLD}${C_CYAN}  Office-in-a-Box Health Check${C_RESET}"
+  echo -e "${C_BOLD}${C_CYAN}  ManhalSphere Health Check${C_RESET}"
   echo -e "${C_BOLD}${C_CYAN}========================================${C_RESET}"
 }
 

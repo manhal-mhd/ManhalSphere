@@ -110,6 +110,7 @@ records=(
 	"pw.$BASE_DOMAIN"
 	"status.$BASE_DOMAIN"
 	"docker.$BASE_DOMAIN"
+	"backup.$BASE_DOMAIN"
 )
 
 for domain in "${records[@]}"; do

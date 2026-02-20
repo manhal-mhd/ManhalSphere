@@ -124,6 +124,51 @@ services:
     expose:
       - "5380"
 
+  backup-manager:
+    image: ghcr.io/garethgeorge/backrest:latest
+    container_name: backup-manager
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - BACKREST_PORT=0.0.0.0:9898
+      - BACKREST_DATA=/data
+      - BACKREST_CONFIG=/config/config.json
+      - XDG_CACHE_HOME=/cache
+      - TZ=${TIMEZONE}
+    volumes:
+      - backrest_data:/data
+      - backrest_config:/config
+      - backrest_cache:/cache
+      - backrest_repos:/repos
+      - /opt/Hanshala:/userdata/workspace:ro
+      - /var/lib/docker/volumes:/userdata/docker-volumes:ro
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backup.rule=Host(`backup.${BASE_DOMAIN}`)
+      - traefik.http.routers.backup.entrypoints=websecure
+      - traefik.http.routers.backup.tls=true
+      - traefik.http.routers.backup.tls.certresolver=le
+      - traefik.http.services.backup.loadbalancer.server.port=9898
+    expose:
+      - "9898"
+
+  backup-db-dumps:
+    image: docker:27-cli
+    container_name: backup-db-dumps
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - BACKUP_DUMPS_DIR=/backups/db-dumps
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts:/scripts:ro
+      - ./backups:/backups
+    command: ["/bin/sh", "/scripts/backup-db-dumps-runner.sh"]
+
   # Optional secure remote access for support
   wireguard:
     image: lscr.io/linuxserver/wireguard:latest
@@ -155,5 +200,9 @@ volumes:
   portainer_data:
   uptime_kuma_data:
   technitium_data:
+  backrest_data:
+  backrest_config:
+  backrest_cache:
+  backrest_repos:
   wireguard_config:
   traefik_letsencrypt:

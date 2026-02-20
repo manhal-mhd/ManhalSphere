@@ -1,6 +1,6 @@
-# Office-in-a-Box Micro Datacenter
+# ManhalSphere Micro Datacenter
 
-Production-oriented self-hosted stack using Docker Compose, designed to expose business apps behind one reverse proxy with per-service subdomains.
+ManhalSphere is a production-oriented self-hosted platform that unifies core business and infrastructure services behind a single, domain-driven gateway. Built with Docker Compose, it provides a practical foundation for running ERP, files, mail, password management, monitoring, backups, and DNS in one coherent operating sphere.
 
 ## What this repository contains
 
@@ -16,6 +16,8 @@ Core services:
 - Traefik reverse proxy (`80/443`)
 - Homer portal (`portal.<domain>`)
 - Technitium DNS Manager (`dns.<domain>` + DNS on `53/tcp` and `53/udp`)
+- Backrest Backup Manager (`backup.<domain>`)
+- Automated DB dump worker (`backup-db-dumps`)
 - Portainer (`docker.<domain>`)
 - Uptime Kuma (`status.<domain>`)
 - WireGuard (`51820/udp`)
@@ -41,6 +43,7 @@ Expected hostnames (from `.env`):
 - `docker.${BASE_DOMAIN}`
 - `mail.${BASE_DOMAIN}`
 - `dns.${BASE_DOMAIN}`
+- `backup.${BASE_DOMAIN}`
 
 Mail DNS additionally requires:
 - `MX` for root domain pointing to mail host
@@ -98,7 +101,7 @@ From `infra/`:
 6. DNS setup (authoritative mapping):
   - Ensure your registrar/domain DNS uses this server as nameserver for the zone.
   - Open inbound DNS ports `53/tcp` and `53/udp` to this host.
-  - Deployment auto-creates/updates A records for: root, `portal`, `erp`, `mail`, `dns`, `files`, `pw`, `status`, `docker`.
+  - Deployment auto-creates/updates A records for: root, `portal`, `erp`, `mail`, `dns`, `files`, `pw`, `status`, `docker`, `backup`.
 
 ---
 
@@ -116,6 +119,7 @@ What it does:
 - Starts ERP nginx only after setup step
 - Waits for ERP endpoint readiness
 - Starts Nextcloud, Vaultwarden, Mailu
+- Keeps automated DB dump worker running for ERP/Nextcloud SQL exports
 
 Useful env controls:
 - `ERP_WAIT_TIMEOUT` (default `900` seconds)
@@ -126,6 +130,12 @@ DNS env controls:
 - `DNS_ADMIN_USER` (default `admin`)
 - `DNS_ADMIN_PASSWORD` (default `admin`, change for production)
 - `DNS_RECORD_IP` (optional; if empty deploy tries to auto-detect)
+
+Backup dump env controls:
+- `BACKUP_DUMP_INTERVAL_HOURS` (default `24`)
+- `BACKUP_DUMPS_RETENTION_DAYS` (default `14`)
+- `ERP_DB_CONTAINER` (default `infra-erp-db-1`)
+- `NEXTCLOUD_DB_CONTAINER` (default `nextcloud-db`)
 
 Example:
 - `ERP_WAIT_TIMEOUT=1200 bash deploy-all.sh`
@@ -230,6 +240,51 @@ Portainer:
 Technitium DNS Manager:
 - URL: `https://dns.<domain>`
 - API/web bootstrap credentials come from `.env`: `DNS_ADMIN_USER` / `DNS_ADMIN_PASSWORD`
+
+Backrest Backup Manager:
+- URL: `https://backup.<domain>`
+- First open: create Backrest admin user/password in the web UI
+- Recommended backup sources mounted read-only in container:
+  - `/userdata/workspace` (repository and infra files)
+  - `/userdata/docker-volumes` (named Docker volumes)
+- Local restic repositories path in container: `/repos`
+- Automated SQL dumps are written to: `infra/backups/db-dumps`
+
+---
+
+## Backup quick start
+
+1. Open `https://backup.<domain>` and complete first-time account setup.
+2. Create a repository (recommended local path: `/repos/manhalsphere`).
+3. Create a plan and include paths:
+   - `/userdata/workspace/infra`
+   - `/userdata/docker-volumes`
+  - Ensure `infra/backups/db-dumps` is included (it is under `infra` path)
+4. Configure schedule (example): daily snapshots + weekly prune/forget.
+5. Add retention policy (example): keep 7 daily, 4 weekly, 6 monthly.
+
+Restore basics:
+- In Backrest UI, open snapshot browser and restore files/folders to a target path.
+- For service data restore, stop affected container first, restore volume data, then start service.
+- For DB restore from dumps: extract `*.sql.gz` and import into target MariaDB container.
+
+---
+
+## Automated DB dump hooks
+
+Service:
+- `backup-db-dumps` runs continuously and creates compressed SQL dumps on schedule.
+
+Scripts:
+- `infra/scripts/backup-db-dumps.sh` (single dump cycle)
+- `infra/scripts/backup-db-dumps-runner.sh` (loop/scheduler)
+
+Manual trigger:
+- `cd infra && /bin/sh scripts/backup-db-dumps.sh`
+
+Output:
+- `infra/backups/db-dumps/erp-*.sql.gz`
+- `infra/backups/db-dumps/nextcloud-*.sql.gz`
 
 ---
 

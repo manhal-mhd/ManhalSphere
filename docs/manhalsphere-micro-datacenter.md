@@ -1,10 +1,10 @@
-# Office-in-a-Box Micro Datacenter
+# ManhalSphere Micro Datacenter
 
-## 1. Project Charter – "Office-in-a-Box Micro Datacenter"
+## 1. Project Charter – "ManhalSphere Micro Datacenter"
 
 ### 1.1 Project Name
 
-Office-in-a-Box Micro Datacenter
+ManhalSphere Micro Datacenter
 
 ### 1.2 Purpose and Background
 
