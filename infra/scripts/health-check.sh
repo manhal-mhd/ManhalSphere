@@ -144,6 +144,8 @@ check_url "Nextcloud" "https://files.${BASE_DOMAIN}" '^(200|301|302)$'
 check_url "Vaultwarden" "https://pw.${BASE_DOMAIN}" '^(200|301|302)$'
 check_url "Uptime Kuma" "https://status.${BASE_DOMAIN}" '^(200|301|302)$'
 check_url "Mail" "https://mail.${BASE_DOMAIN}" '^(200|301|302)$'
+check_url "DNS Manager" "https://dns.${BASE_DOMAIN}" '^(200|301|302)$'
+check_url "Backup Manager" "https://backup.${BASE_DOMAIN}" '^(200|301|302)$'
 
 print_section "[2/3] Checking mail protocol ports"
 check_port "SMTP" "mail.${BASE_DOMAIN}" 25
@@ -154,6 +156,13 @@ check_port "IMAPS" "mail.${BASE_DOMAIN}" 993
 
 print_section "[3/3] Checking key containers"
 check_container_health "Traefik" '^reverse-proxy\|'
+check_container_health "Portal" '^portal\|'
+check_container_health "DNS Server" '^dns-server\|'
+check_container_health "Backup Manager" '^backup-manager\|'
+check_container_health "Backup DB Dumps" '^backup-db-dumps\|'
+check_container_health "Portainer" '^portainer\|'
+check_container_health "Uptime Kuma" '^uptime-kuma\|'
+check_container_health "WireGuard" '^wireguard\|'
 check_container_health "Mailu Front" '^mailu-front\|'
 check_container_health "ERP App" '^infra-erp-app-1\|'
 check_container_health "Nextcloud" '^nextcloud-app\|'

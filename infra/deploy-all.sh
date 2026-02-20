@@ -149,12 +149,12 @@ load_base_domain
 print_header
 render_portal_config
 
-run_stack "[1/5] Starting core infrastructure stack (proxy, portal, monitoring, wireguard)..." \
+run_stack "[1/6] Starting core infrastructure stack (proxy, portal, dns, backup, monitoring, wireguard)..." \
 	-f docker-compose.yml up -d
 
 bootstrap_dns_records
 
-run_stack "[2/5] Building and starting ERP core services..." \
+run_stack "[2/6] Building and starting ERP core services..." \
 	-f docker-compose.erpnext-hrms.yml up -d --build erp-db erp-redis-cache erp-redis-queue erp-app
 
 print_step "[ERP] Running ERP+HRMS setup/migrations..."

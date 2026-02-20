@@ -370,6 +370,7 @@ print_requirements_guide() {
    - status.$BASE_DOMAIN
    - docker.$BASE_DOMAIN
    - mail.$BASE_DOMAIN
+  - backup.$BASE_DOMAIN
 
 2) Mail DNS records:
    - MX: $DOMAIN -> $MAIL_HOST
@@ -414,7 +415,7 @@ print_credentials_guide() {
   Password: from ERP_ADMIN_PASSWORD (if not set, setup script default is 'admin')
 
 - Mailu Admin:
-  URL: https://$MAIL_HOST/admin
+  URL: https://$MAIL_HOST/sso/login
   User: postmaster@$DOMAIN (or MAIL_ADMIN_ADDRESS if customized)
   Password: set during Mailu bootstrap (not stored in env by default)
 
@@ -434,6 +435,10 @@ print_credentials_guide() {
 
 - Portainer:
   URL: https://$DOCKER_UI_HOST
+  Credentials created on first login.
+
+- Backrest Backup Manager:
+  URL: https://backup.$BASE_DOMAIN
   Credentials created on first login.
 EOF
 }
@@ -491,6 +496,7 @@ main() {
   PASSWORDS_HOST="${PASSWORDS_HOST:-pw.${BASE_DOMAIN}}"
   STATUS_HOST="${STATUS_HOST:-status.${BASE_DOMAIN}}"
   DOCKER_UI_HOST="${DOCKER_UI_HOST:-docker.${BASE_DOMAIN}}"
+  BACKUP_HOST="${BACKUP_HOST:-backup.${BASE_DOMAIN}}"
   LETSENCRYPT_EMAIL="${LETSENCRYPT_EMAIL:-}"
   MARIADB_ROOT_PASSWORD="${MARIADB_ROOT_PASSWORD:-}"
   ERP_DB_PASSWORD="${ERP_DB_PASSWORD:-}"
@@ -556,6 +562,7 @@ main() {
   check_dns_a_record "$STATUS_HOST" "$EXPECTED_IP"
   check_dns_a_record "$DOCKER_UI_HOST" "$EXPECTED_IP"
   check_dns_a_record "$MAIL_HOST" "$EXPECTED_IP"
+  check_dns_a_record "$BACKUP_HOST" "$EXPECTED_IP"
 
   print_section "[5/6] Checking mail DNS records"
   check_mx_record "$DOMAIN" "$MAIL_HOST"

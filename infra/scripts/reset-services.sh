@@ -80,7 +80,7 @@ reset_all() {
   reset_stack docker-compose.vaultwarden.yml "Vaultwarden"
   reset_stack docker-compose.nextcloud.yml "Nextcloud"
   reset_stack docker-compose.erpnext-hrms.yml "ERPNext + HRMS"
-  reset_stack docker-compose.yml "Core stack (Traefik/Portal/Monitoring/WireGuard)"
+  reset_stack docker-compose.yml "Core stack (Traefik/Portal/DNS/Backup/Portainer/Uptime/WireGuard/DB-Dumps)"
 }
 
 print_menu() {
@@ -92,7 +92,7 @@ Choose what to reset:
   2) ERPNext + HRMS
   3) Nextcloud
   4) Vaultwarden
-  5) Core stack (Traefik/Portal/Monitoring/WireGuard)
+  5) Core stack (Traefik/Portal/DNS/Backup/Portainer/Uptime/WireGuard/DB-Dumps)
   6) All stacks (full fresh reset)
   7) Exit
 EOF
@@ -133,8 +133,8 @@ main() {
       reset_stack docker-compose.vaultwarden.yml "Vaultwarden"
       ;;
     5)
-      confirm_or_exit "Core stack (Traefik/Portal/Monitoring/WireGuard)"
-      reset_stack docker-compose.yml "Core stack (Traefik/Portal/Monitoring/WireGuard)"
+      confirm_or_exit "Core stack (Traefik/Portal/DNS/Backup/Portainer/Uptime/WireGuard/DB-Dumps)"
+      reset_stack docker-compose.yml "Core stack (Traefik/Portal/DNS/Backup/Portainer/Uptime/WireGuard/DB-Dumps)"
       ;;
     6)
       confirm_or_exit "ALL STACKS"
