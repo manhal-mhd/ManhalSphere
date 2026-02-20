@@ -58,3 +58,8 @@ services:
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/mailu.svg"
         url: "https://mail.__BASE_DOMAIN__/sso/login"
         target: "_blank"
+      - name: Identity & SSO
+        subtitle: Login, password, profile
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/keycloak.svg"
+        url: "https://idp.__BASE_DOMAIN__"
+        target: "_blank"

@@ -1,0 +1,78 @@
+version: "3.9"
+
+services:
+  authentik:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_EMAIL__HOST=${AUTHENTIK_EMAIL__HOST}
+      - AUTHENTIK_EMAIL__PORT=${AUTHENTIK_EMAIL__PORT}
+      - AUTHENTIK_EMAIL__USERNAME=${AUTHENTIK_EMAIL__USERNAME}
+      - AUTHENTIK_EMAIL__PASSWORD=${AUTHENTIK_EMAIL__PASSWORD}
+      - AUTHENTIK_EMAIL__USE_TLS=${AUTHENTIK_EMAIL__USE_TLS}
+      - AUTHENTIK_EMAIL__FROM=${AUTHENTIK_EMAIL__FROM}
+      - AUTHENTIK_DEFAULT_USER_EMAIL=${AUTHENTIK_DEFAULT_USER_EMAIL}
+      - AUTHENTIK_DEFAULT_USER_PASSWORD=${AUTHENTIK_DEFAULT_USER_PASSWORD}
+      - AUTHENTIK_DEFAULT_USER_NAME=${AUTHENTIK_DEFAULT_USER_NAME}
+      - AUTHENTIK_DEFAULT_USER_USERNAME=${AUTHENTIK_DEFAULT_USER_USERNAME}
+      - AUTHENTIK_POSTGRESQL__HOST=authentik-db
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_DB_PASSWORD}
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_REDIS__HOST=authentik-redis
+      - AUTHENTIK_REDIS__DB=0
+      - TZ=${TIMEZONE}
+    volumes:
+      - authentik_media:/media
+      - authentik_custom:/custom
+    networks:
+      - proxy
+      - backend
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.authentik.rule=Host(`idp.${BASE_DOMAIN}`)
+      - traefik.http.routers.authentik.entrypoints=websecure
+      - traefik.http.routers.authentik.tls=true
+      - traefik.http.routers.authentik.tls.certresolver=le
+      - traefik.http.services.authentik.loadbalancer.server.port=9000
+    expose:
+      - "9000"
+
+  authentik-db:
+    image: postgres:15-alpine
+    container_name: authentik-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=authentik
+      - POSTGRES_USER=authentik
+      - POSTGRES_PASSWORD=${AUTHENTIK_DB_PASSWORD}
+      - TZ=${TIMEZONE}
+    volumes:
+      - authentik_db:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  authentik-redis:
+    image: redis:alpine
+    container_name: authentik-redis
+    restart: unless-stopped
+    networks:
+      - backend
+    volumes:
+      - authentik_redis:/data
+
+networks:
+  proxy:
+    external: true
+  backend:
+    external: true
+
+volumes:
+  authentik_media:
+  authentik_custom:
+  authentik_db:
+  authentik_redis:

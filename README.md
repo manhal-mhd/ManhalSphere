@@ -217,25 +217,58 @@ Modes:
 ## Credentials and first-login notes
 
 ERPNext:
-- URL: `https://erp.<domain>`
-- User: `Administrator`
-- Password: from `ERP_ADMIN_PASSWORD` (or setup default if not set)
+  - URL: `https://erp.<domain>`
+  - User: `Administrator`
+  - Password: from `ERP_ADMIN_PASSWORD` (or setup default if not set)
 
 Mailu:
-- Admin URL: `https://mail.<domain>/sso/login`
-- Mailbox login URL: `https://mail.<domain>/webmail/`
+  - Admin URL: `https://mail.<domain>/sso/login`
+  - Mailbox login URL: `https://mail.<domain>/webmail/`
+
+### Reset Mailu admin password via database
+
+If the CLI or web UI reset fails, you can reset the admin password directly in the Mailu database:
+
+1. Enter the Mailu database container (MariaDB/Postgres):
+   - For MariaDB:
+     sudo docker exec -it mailu-db /bin/sh
+     mysql -u root -p
+   - For Postgres:
+     sudo docker exec -it mailu-db /bin/sh
+     psql -U mailu
+
+2. Find the admin user row in the users table:
+   - MariaDB:
+     USE mailu;
+     SELECT * FROM user WHERE username='admin';
+   - Postgres:
+     SELECT * FROM "user" WHERE username='admin';
+
+3. Update the password hash for the admin user. Mailu uses PBKDF2 hashes. You can generate a new hash using Python:
+   python3 -c "from passlib.hash import pbkdf2_sha256; print(pbkdf2_sha256.hash('NewPassword'))"
+
+4. Update the password in the database:
+   - MariaDB:
+     UPDATE user SET password='<newhash>' WHERE username='admin';
+   - Postgres:
+     UPDATE "user" SET password='<newhash>' WHERE username='admin';
+
+5. Restart Mailu containers:
+   sudo docker compose -f docker-compose.mail.yml restart
+
+You can now log in with the new admin password.
 
 Nextcloud:
-- URL: `https://files.<domain>`
-- Complete initial admin setup in UI if fresh volume
+  - URL: `https://files.<domain>`
+  - Complete initial admin setup in UI if fresh volume
 
 Vaultwarden:
-- URL: `https://pw.<domain>`
+  - URL: `https://pw.<domain>`
 
 Portainer:
-- URL: `https://docker.<domain>`
-- If you see `timeout.html`, restart container once:
-  - `sudo docker restart portainer`
+  - URL: `https://docker.<domain>`
+  - If you see `timeout.html`, restart container once:
+    - `sudo docker restart portainer`
 
 Technitium DNS Manager:
 - URL: `https://dns.<domain>`
