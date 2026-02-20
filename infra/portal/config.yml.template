@@ -1,0 +1,55 @@
+title: Office-in-a-Box Portal
+subtitle: Launch all applications
+header: true
+footer: false
+columns: "3"
+connectivityCheck: true
+
+services:
+  - name: Business Apps
+    icon: "fas fa-briefcase"
+    items:
+      - name: ERPNext + HRMS
+        subtitle: Business operations and HR
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/frappe.svg"
+        url: "https://erp.__BASE_DOMAIN__"
+        target: "_blank"
+      - name: Mail
+        subtitle: Webmail
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/mailcow.svg"
+        url: "https://mail.__BASE_DOMAIN__/webmail/"
+        target: "_blank"
+      - name: Nextcloud
+        subtitle: Files and collaboration
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg"
+        url: "https://files.__BASE_DOMAIN__"
+        target: "_blank"
+      - name: Vaultwarden
+        subtitle: Password manager
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/bitwarden.svg"
+        url: "https://pw.__BASE_DOMAIN__"
+        target: "_blank"
+
+  - name: Admin & Ops
+    icon: "fas fa-tools"
+    items:
+      - name: Portainer
+        subtitle: Container management
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/portainer.svg"
+        url: "https://docker.__BASE_DOMAIN__"
+        target: "_blank"
+      - name: Uptime Kuma
+        subtitle: Monitoring
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/uptime-kuma.svg"
+        url: "https://status.__BASE_DOMAIN__"
+        target: "_blank"
+      - name: DNS Manager
+        subtitle: DNS zones and records
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/pi-hole.svg"
+        url: "https://dns.__BASE_DOMAIN__"
+        target: "_blank"
+      - name: Mail Admin
+        subtitle: Mailu administration
+        logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/mailu.svg"
+        url: "https://mail.__BASE_DOMAIN__/sso/login"
+        target: "_blank"

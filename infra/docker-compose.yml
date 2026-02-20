@@ -41,7 +41,7 @@ services:
     env_file:
       - .env
     volumes:
-      - portal_data:/www/assets
+      - ./portal:/www/assets:ro
     networks:
       - proxy
     labels:
@@ -97,6 +97,33 @@ services:
     expose:
       - "3001"
 
+  dns-server:
+    image: technitium/dns-server:latest
+    container_name: dns-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=${TIMEZONE}
+    volumes:
+      - technitium_data:/etc/dns
+    networks:
+      - proxy
+      - backend
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dns.rule=Host(`dns.${BASE_DOMAIN}`)
+      - traefik.http.routers.dns.entrypoints=websecure
+      - traefik.http.routers.dns.tls=true
+      - traefik.http.routers.dns.tls.certresolver=le
+      - traefik.http.services.dns.loadbalancer.server.port=5380
+    ports:
+      - "${DNS_BIND_IP}:53:53/udp"
+      - "${DNS_BIND_IP}:53:53/tcp"
+      - "127.0.0.1:5380:5380"
+    expose:
+      - "5380"
+
   # Optional secure remote access for support
   wireguard:
     image: lscr.io/linuxserver/wireguard:latest
@@ -125,8 +152,8 @@ networks:
     driver: bridge
 
 volumes:
-  portal_data:
   portainer_data:
   uptime_kuma_data:
+  technitium_data:
   wireguard_config:
   traefik_letsencrypt:

@@ -15,6 +15,7 @@ Production-oriented self-hosted stack using Docker Compose, designed to expose b
 Core services:
 - Traefik reverse proxy (`80/443`)
 - Homer portal (`portal.<domain>`)
+- Technitium DNS Manager (`dns.<domain>` + DNS on `53/tcp` and `53/udp`)
 - Portainer (`docker.<domain>`)
 - Uptime Kuma (`status.<domain>`)
 - WireGuard (`51820/udp`)
@@ -39,6 +40,7 @@ Expected hostnames (from `.env`):
 - `status.${BASE_DOMAIN}`
 - `docker.${BASE_DOMAIN}`
 - `mail.${BASE_DOMAIN}`
+- `dns.${BASE_DOMAIN}`
 
 Mail DNS additionally requires:
 - `MX` for root domain pointing to mail host
@@ -88,8 +90,15 @@ From `infra/`:
 4. Deploy:
    - `cd .. && bash deploy-all.sh`
 
+  Note: deployment now auto-renders `infra/portal/config.yml` from `infra/portal/config.yml.template` using `BASE_DOMAIN`.
+
 5. Validate:
    - `cd scripts && ./health-check.sh`
+
+6. DNS setup (authoritative mapping):
+  - Ensure your registrar/domain DNS uses this server as nameserver for the zone.
+  - Open inbound DNS ports `53/tcp` and `53/udp` to this host.
+  - Deployment auto-creates/updates A records for: root, `portal`, `erp`, `mail`, `dns`, `files`, `pw`, `status`, `docker`.
 
 ---
 
@@ -99,7 +108,9 @@ From `infra/`:
 Main deployment entrypoint.
 
 What it does:
+- Renders portal links from `BASE_DOMAIN` before startup
 - Starts core stack
+- Bootstraps DNS zone + subdomain A records from `.env`
 - Builds/starts ERP core services
 - Runs ERP setup/migrations as one-off job
 - Starts ERP nginx only after setup step
@@ -110,8 +121,40 @@ Useful env controls:
 - `ERP_WAIT_TIMEOUT` (default `900` seconds)
 - `ERP_WAIT_INTERVAL` (default `5` seconds)
 
+DNS env controls:
+- `DNS_API_URL` (default `http://localhost:5380`)
+- `DNS_ADMIN_USER` (default `admin`)
+- `DNS_ADMIN_PASSWORD` (default `admin`, change for production)
+- `DNS_RECORD_IP` (optional; if empty deploy tries to auto-detect)
+
 Example:
 - `ERP_WAIT_TIMEOUT=1200 bash deploy-all.sh`
+
+---
+
+### `infra/scripts/render-portal-config.sh`
+Renders Homer portal config from template with current domain.
+
+What it does:
+- Reads `BASE_DOMAIN` from `infra/.env`
+- Replaces `__BASE_DOMAIN__` in `infra/portal/config.yml.template`
+- Writes final `infra/portal/config.yml`
+
+Run manually:
+- `cd infra && bash scripts/render-portal-config.sh`
+
+---
+
+### `infra/scripts/bootstrap-dns.sh`
+Auto-creates DNS zone and maps application subdomains.
+
+What it does:
+- Logs into Technitium DNS API
+- Creates primary zone for `BASE_DOMAIN` (if missing)
+- Upserts A records for root and app subdomains
+
+Run manually:
+- `cd infra && bash scripts/bootstrap-dns.sh`
 
 ---
 
@@ -169,7 +212,7 @@ ERPNext:
 - Password: from `ERP_ADMIN_PASSWORD` (or setup default if not set)
 
 Mailu:
-- Admin URL: `https://mail.<domain>/admin`
+- Admin URL: `https://mail.<domain>/sso/login`
 - Mailbox login URL: `https://mail.<domain>/webmail/`
 
 Nextcloud:
@@ -183,6 +226,10 @@ Portainer:
 - URL: `https://docker.<domain>`
 - If you see `timeout.html`, restart container once:
   - `sudo docker restart portainer`
+
+Technitium DNS Manager:
+- URL: `https://dns.<domain>`
+- API/web bootstrap credentials come from `.env`: `DNS_ADMIN_USER` / `DNS_ADMIN_PASSWORD`
 
 ---
 

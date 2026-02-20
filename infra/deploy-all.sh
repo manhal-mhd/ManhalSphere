@@ -62,6 +62,36 @@ load_base_domain() {
 	fi
 }
 
+render_portal_config() {
+	print_step "[Init] Rendering portal config from BASE_DOMAIN..."
+	if [ -x "scripts/render-portal-config.sh" ]; then
+		if bash scripts/render-portal-config.sh; then
+			print_ok "[Init] Portal config rendered"
+		else
+			print_fail "[Init] Portal config render failed"
+			exit 1
+		fi
+	else
+		print_warn "scripts/render-portal-config.sh not executable; attempting to run via bash"
+		if bash scripts/render-portal-config.sh; then
+			print_ok "[Init] Portal config rendered"
+		else
+			print_fail "[Init] Portal config render failed"
+			exit 1
+		fi
+	fi
+}
+
+bootstrap_dns_records() {
+	print_step "[Init] Bootstrapping DNS zone and subdomain records..."
+	if bash scripts/bootstrap-dns.sh; then
+		print_ok "[Init] DNS records synchronized"
+	else
+		print_warn "[Init] DNS bootstrap failed (continuing deployment)."
+		print_warn "Check DNS admin credentials in .env: DNS_ADMIN_USER / DNS_ADMIN_PASSWORD"
+	fi
+}
+
 wait_for_erp_ready() {
 	if [ -z "$BASE_DOMAIN" ]; then
 		print_warn "BASE_DOMAIN not found in .env; skipping ERP readiness wait."
@@ -117,9 +147,12 @@ run_stack() {
 init_colors
 load_base_domain
 print_header
+render_portal_config
 
 run_stack "[1/5] Starting core infrastructure stack (proxy, portal, monitoring, wireguard)..." \
 	-f docker-compose.yml up -d
+
+bootstrap_dns_records
 
 run_stack "[2/5] Building and starting ERP core services..." \
 	-f docker-compose.erpnext-hrms.yml up -d --build erp-db erp-redis-cache erp-redis-queue erp-app
@@ -137,18 +170,18 @@ run_stack "[ERP] Starting ERP web (nginx)..." \
 
 wait_for_erp_ready
 
-run_stack "[3/5] Starting Nextcloud stack..." \
+run_stack "[3/6] Starting Nextcloud stack..." \
 	-f docker-compose.nextcloud.yml up -d
 
-run_stack "[4/5] Starting Vaultwarden stack..." \
+run_stack "[4/6] Starting Vaultwarden stack..." \
 	-f docker-compose.vaultwarden.yml up -d
 
-print_step "[5/5] Starting Mailu stack..."
+print_step "[5/6] Starting Mailu stack..."
 if [ -f "mailu.env" ]; then
 	if compose_cmd -f docker-compose.mail.yml up -d; then
-		print_ok "[5/5] Mailu stack completed"
+		print_ok "[5/6] Mailu stack completed"
 	else
-		print_fail "[5/5] Mailu stack failed"
+		print_fail "[5/6] Mailu stack failed"
 		exit 1
 	fi
 else
