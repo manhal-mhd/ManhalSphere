@@ -20,7 +20,7 @@ services:
         url: "https://mail.__BASE_DOMAIN__/webmail/"
         target: "_blank"
       - name: Nextcloud
-        subtitle: Files and collaboration
+        subtitle: Files & collaboration
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/nextcloud.svg"
         url: "https://files.__BASE_DOMAIN__"
         target: "_blank"
@@ -49,14 +49,14 @@ services:
         url: "https://dns.__BASE_DOMAIN__"
         target: "_blank"
       - name: Backup Manager
-        subtitle: Restic backups and restore
+        subtitle: Backups & restores
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/restic.svg"
         url: "https://backup.__BASE_DOMAIN__"
         target: "_blank"
       - name: Mail Admin
         subtitle: Mailu administration
         logo: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/mailu.svg"
-        url: "https://mail.__BASE_DOMAIN__/sso/login"
+        url: "https://mail.__BASE_DOMAIN__/admin"
         target: "_blank"
       - name: Identity & SSO
         subtitle: Login, password, profile
